@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sayrox AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+  /* Düzen: tek sütun, üstte sabit başlık, ortada kayan sohbet, altta sabit yazma alanı */
+  :root {
+    --bg: #F3F5F8;
+    --surface: #FFFFFF;
+    --fg: #14202B;
+    --muted: #5B6B78;
+    --line: #DAE0E7;
+    --accent: #2748E8;
+    --accent-fg: #FFFFFF;
+    --code-bg: #E9EEF4;
+    --danger: #B3261E;
+    --font-display: "Space Grotesk", system-ui, sans-serif;
+    --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0E141A;
+      --surface: #151D25;
+      --fg: #E6ECF1;
+      --muted: #8A9AA8;
+      --line: #26323D;
+      --accent: #3F5CF0;
+      --accent-fg: #FFFFFF;
+      --code-bg: #1B2530;
+      --danger: #F2B8B5;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0E141A;
+    --surface: #151D25;
+    --fg: #E6ECF1;
+    --muted: #8A9AA8;
+    --line: #26323D;
+    --accent: #3F5CF0;
+    --accent-fg: #FFFFFF;
+    --code-bg: #1B2530;
+    --danger: #F2B8B5;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font: 16px/1.55 var(--font-body);
+    display: flex;
+    flex-direction: column;
+    -webkit-text-size-adjust: 100%;
+  }
+  [hidden] { display: none !important; }
+
+  .wrap {
+    width: 100%;
+    max-width: 720px;
+    margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+
+  header {
+    border-bottom: 1px solid var(--line);
+    background: var(--bg);
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  header .wrap {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-block: 12px;
+  }
+  .marka {
+    font: 700 20px/1 var(--font-display);
+    letter-spacing: -0.01em;
+  }
+  .marka span { color: var(--accent); }
+  .yeni {
+    font: 500 14px/1 var(--font-body);
+    color: var(--fg);
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 9px 12px;
+    cursor: pointer;
+  }
+  .yeni:hover { border-color: var(--muted); }
+
+  main {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  #liste {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding-block: 24px;
+  }
+
+  .bos { padding-top: 8vh; }
+  .bos h1 {
+    font: 700 clamp(28px, 7vw, 40px)/1.1 var(--font-display);
+    letter-spacing: -0.02em;
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+  .bos p { margin: 0 0 22px; color: var(--muted); max-width: 46ch; }
+  .oneriler { display: flex; flex-direction: column; gap: 8px; }
+  .oneri {
+    text-align: left;
+    font: 500 15px/1.4 var(--font-body);
+    color: var(--fg);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 13px 14px;
+    cursor: pointer;
+  }
+  .oneri:hover { border-color: var(--accent); }
+
+  .msg { display: flex; flex-direction: column; min-width: 0; }
+  .msg.user { align-items: flex-end; }
+  .msg.user .metin {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-radius: 16px 16px 4px 16px;
+    padding: 10px 14px;
+    max-width: 88%;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .msg.bot .etiket {
+    font: 600 12px/1 var(--font-body);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .msg.bot .metin { overflow-wrap: anywhere; min-width: 0; }
+  .metin p { margin: 0 0 10px; }
+  .metin p:last-child, .metin ul:last-child, .metin ol:last-child { margin-bottom: 0; }
+  .metin ul, .metin ol { margin: 0 0 10px; padding-left: 22px; }
+  .metin li { margin-bottom: 4px; }
+  .metin h4 { font: 600 16px/1.3 var(--font-display); margin: 14px 0 6px; }
+  .metin code {
+    font: 0.88em var(--font-mono);
+    background: var(--code-bg);
+    border-radius: 4px;
+    padding: 1px 5px;
+  }
+  .metin pre {
+    background: var(--code-bg);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin: 0 0 10px;
+    overflow-x: auto;
+  }
+  .metin pre code { background: none; padding: 0; font-size: 13.5px; line-height: 1.5; }
+
+  .yaziyor { display: inline-flex; gap: 5px; padding: 6px 0; }
+  .yaziyor i {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--muted);
+    animation: nabiz 1.1s infinite ease-in-out;
+  }
+  .yaziyor i:nth-child(2) { animation-delay: .15s; }
+  .yaziyor i:nth-child(3) { animation-delay: .3s; }
+  @keyframes nabiz { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .yaziyor i { animation: none; opacity: .6; } }
+
+  .hata {
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .hata button {
+    font: 500 14px/1 var(--font-body);
+    color: var(--danger);
+    background: transparent;
+    border: 1px solid var(--danger);
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+
+  footer {
+    background: var(--bg);
+    border-top: 1px solid var(--line);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  form { display: flex; align-items: flex-end; gap: 8px; padding-block: 12px; }
+  textarea {
+    flex: 1;
+    min-width: 0;
+    resize: none;
+    font: 16px/1.4 var(--font-body);
+    color: var(--fg);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 11px 14px;
+    max-height: 160px;
+  }
+  textarea::placeholder { color: var(--muted); }
+  textarea:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .gonder {
+    flex: none;
+    height: 44px;
+    padding: 0 18px;
+    font: 600 15px/1 var(--font-body);
+    color: var(--accent-fg);
+    background: var(--accent);
+    border: 0;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  .gonder:disabled { opacity: .45; cursor: default; }
+  .not { margin: 0; padding-bottom: 10px; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="marka">Sayrox <span>AI</span></div>
+      <button class="yeni" id="yeni" type="button">Yeni sohbet</button>
+    </div>
+  </header>
+
+  <main id="kaydir">
+    <div class="wrap">
+      <div id="liste" aria-live="polite"></div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <form id="form">
+        <textarea id="girdi" rows="1" placeholder="Bir şey yaz..." aria-label="Mesajın"></textarea>
+        <button class="gonder" id="gonder" type="submit">Gönder</button>
+      </form>
+      <p class="not">Yapay zeka hata yapabilir. Önemli bilgileri kontrol et.</p>
+    </div>
+  </footer>
+
+<script>
+  var KEY = "sayrox-sohbet-v1";
+  var mesajlar = [];
+  var bekliyor = false;
+  var hataMetni = "";
+
+  try {
+    var kayit = JSON.parse(localStorage.getItem(KEY) || "[]");
+    if (Array.isArray(kayit)) mesajlar = kayit.filter(function (m) {
+      return m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string";
+    });
+  } catch (e) { mesajlar = []; }
+
+  var liste = document.getElementById("liste");
+  var kaydir = document.getElementById("kaydir");
+  var girdi = document.getElementById("girdi");
+  var gonderBtn = document.getElementById("gonder");
+
+  var ONERILER = [
+    "Bir e-postayı daha kibar bir dille yeniden yaz",
+    "Python'da listenin ne olduğunu basit bir örnekle anlat",
+    "Hafta sonu için 3 günlük bir çalışma planı hazırla"
+  ];
+
+  function kaydet() {
+    try { localStorage.setItem(KEY, JSON.stringify(mesajlar.slice(-60))); } catch (e) {}
+  }
+
+  function esc(s) {
+    return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function satir(s) {
+    s = esc(s);
+    s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
+    s = s.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+    return s;
+  }
+  function blok(t) {
+    var out = [], liste = null;
+    function kapat() { if (liste) { out.push("</" + liste + ">"); liste = null; } }
+    t.split("\n").forEach(function (raw) {
+      var l = raw.replace(/\s+$/, ""), m;
+      if ((m = l.match(/^\s*[-*]\s+(.*)$/))) {
+        if (liste !== "ul") { kapat(); out.push("<ul>"); liste = "ul"; }
+        out.push("<li>" + satir(m[1]) + "</li>");
+      } else if ((m = l.match(/^\s*\d+[.)]\s+(.*)$/))) {
+        if (liste !== "ol") { kapat(); out.push("<ol>"); liste = "ol"; }
+        out.push("<li>" + satir(m[1]) + "</li>");
+      } else if ((m = l.match(/^#{1,4}\s+(.*)$/))) {
+        kapat(); out.push("<h4>" + satir(m[1]) + "</h4>");
+      } else if (l.trim() === "") {
+        kapat();
+      } else {
+        kapat(); out.push("<p>" + satir(l) + "</p>");
+      }
+    });
+    kapat();
+    return out.join("");
+  }
+  function md(src) {
+    return src.split("```").map(function (p, i) {
+      if (i % 2 === 1) {
+        var nl = p.indexOf("\n");
+        var kod = nl >= 0 ? p.slice(nl + 1) : p;
+        return "<pre><code>" + esc(kod.replace(/\n$/, "")) + "</code></pre>";
+      }
+      return blok(p);
+    }).join("");
+  }
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function ciz() {
+    liste.textContent = "";
+    if (mesajlar.length === 0 && !bekliyor) {
+      var bos = el("div", "bos");
+      bos.appendChild(el("h1", null, "Bugün neyi çözelim?"));
+      bos.appendChild(el("p", null, "Sorunu yaz, birlikte düşünelim. Aşağıdakilerden biriyle de başlayabilirsin."));
+      var kutu = el("div", "oneriler");
+      ONERILER.forEach(function (o) {
+        var b = el("button", "oneri", o);
+        b.type = "button";
+        b.addEventListener("click", function () { gonder(o); });
+        kutu.appendChild(b);
+      });
+      bos.appendChild(kutu);
+      liste.appendChild(bos);
+      return;
+    }
+    mesajlar.forEach(function (m) {
+      if (m.role === "user") {
+        var u = el("div", "msg user");
+        u.appendChild(el("div", "metin", m.content));
+        liste.appendChild(u);
+      } else {
+        var b = el("div", "msg bot");
+        b.appendChild(el("div", "etiket", "Sayrox"));
+        var t = el("div", "metin");
+        t.innerHTML = md(m.content);
+        b.appendChild(t);
+        liste.appendChild(b);
+      }
+    });
+    if (bekliyor) {
+      var y = el("div", "msg bot");
+      y.appendChild(el("div", "etiket", "Sayrox"));
+      var d = el("div", "yaziyor");
+      d.setAttribute("role", "status");
+      d.setAttribute("aria-label", "Yazıyor");
+      d.innerHTML = "<i></i><i></i><i></i>";
+      y.appendChild(d);
+      liste.appendChild(y);
+    }
+    if (hataMetni) {
+      var h = el("div", "hata");
+      h.appendChild(el("span", null, hataMetni));
+      var tekrar = el("button", null, "Tekrar dene");
+      tekrar.type = "button";
+      tekrar.addEventListener("click", uret);
+      h.appendChild(tekrar);
+      liste.appendChild(h);
+    }
+    kaydir.scrollTop = kaydir.scrollHeight;
+  }
+
+  async function uret() {
+    if (bekliyor || mesajlar.length === 0) return;
+    bekliyor = true;
+    hataMetni = "";
+    gonderBtn.disabled = true;
+    ciz();
+    try {
+      var r = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: mesajlar.slice(-20) })
+      });
+      var v = {};
+      try { v = await r.json(); } catch (e) {}
+      if (!r.ok || !v.reply) throw new Error(v.error || "Cevap alınamadı. Biraz sonra tekrar dene.");
+      mesajlar.push({ role: "assistant", content: v.reply });
+      kaydet();
+    } catch (e) {
+      hataMetni = e && e.message ? e.message : "Bağlantı hatası. İnternetini kontrol edip tekrar dene.";
+      if (hataMetni === "Failed to fetch") hataMetni = "Bağlantı hatası. İnternetini kontrol edip tekrar dene.";
+    }
+    bekliyor = false;
+    gonderBtn.disabled = false;
+    ciz();
+  }
+
+  function gonder(metin) {
+    metin = (metin || "").trim();
+    if (!metin || bekliyor) return;
+    mesajlar.push({ role: "user", content: metin });
+    kaydet();
+    girdi.value = "";
+    boyutla();
+    uret();
+  }
+
+  function boyutla() {
+    girdi.style.height = "auto";
+    girdi.style.height = Math.min(girdi.scrollHeight, 160) + "px";
+  }
+
+  document.getElementById("form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    gonder(girdi.value);
+  });
+  girdi.addEventListener("input", boyutla);
+  girdi.addEventListener("keydown", function (e) {
+    var masaustu = window.matchMedia && window.matchMedia("(pointer: fine)").matches;
+    if (e.key === "Enter" && !e.shiftKey && masaustu) {
+      e.preventDefault();
+      gonder(girdi.value);
+    }
+  });
+  document.getElementById("yeni").addEventListener("click", function () {
+    if (bekliyor) return;
+    mesajlar = [];
+    hataMetni = "";
+    kaydet();
+    ciz();
+    girdi.focus();
+  });
+
+  ciz();
+</script>
+</body>
+</html>
