@@ -1,0 +1,1282 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E7C70">
+<title>Sayrox AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+  /* Düzen: üstte marka ve mod çubuğu, ortada kayan sohbet, altta ekli yazma alanı.
+     Geçmiş soldan, görünüm ayarları alttan açılan sayfa olarak gelir.
+     Renkler: her renk teması iki ana renk (g1, g2) ve açık/koyu için iki vurgu rengi tanımlar. */
+  :root {
+    --bg: #F5F7F6;
+    --surface: #FFFFFF;
+    --fg: #0F1A19;
+    --muted: #5A6B69;
+    --line: #DCE4E2;
+    --code-bg: #EAF0EE;
+    --danger: #B3261E;
+    --scrim: rgba(10, 20, 19, .45);
+    --g1: #0E7C70; --g2: #1565C0;
+    --acc-l: #0E7C70; --acc2-l: #1565C0;
+    --acc-d: #4FD1C5; --acc2-d: #6EA8FF;
+    --accent: var(--acc-l);
+    --accent2: var(--acc2-l);
+    --accent-fg: #FFFFFF;
+    --accent-soft: color-mix(in srgb, var(--accent) 12%, var(--surface));
+    --grad: linear-gradient(135deg, var(--g1), var(--g2));
+    --grad-text: linear-gradient(90deg, var(--accent), var(--accent2));
+    --glow: .10;
+    --font-display: "Space Grotesk", system-ui, sans-serif;
+    --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0B1211; --surface: #121C1B; --fg: #E4EEEC; --muted: #8CA09D;
+      --line: #213130; --code-bg: #0F1918; --danger: #F2B8B5; --scrim: rgba(0, 0, 0, .6);
+      --accent: var(--acc-d); --accent2: var(--acc2-d); --glow: .16;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0B1211; --surface: #121C1B; --fg: #E4EEEC; --muted: #8CA09D;
+    --line: #213130; --code-bg: #0F1918; --danger: #F2B8B5; --scrim: rgba(0, 0, 0, .6);
+    --accent: var(--acc-d); --accent2: var(--acc2-d); --glow: .16;
+    color-scheme: dark;
+  }
+  /* Renk temaları */
+  :root[data-palet="gun"]    { --g1: #D9480F; --g2: #C2255C; --acc-l: #C2410C; --acc2-l: #BE185D; --acc-d: #FF9A62; --acc2-d: #FF6FA0; }
+  :root[data-palet="orman"]  { --g1: #2F7D4F; --g2: #5E8C1A; --acc-l: #2F7D4F; --acc2-l: #4D7C0F; --acc-d: #6FD79A; --acc2-d: #B5E04F; }
+  :root[data-palet="aurora"] { --g1: #6D28D9; --g2: #0E9F94; --acc-l: #6D28D9; --acc2-l: #0F766E; --acc-d: #B197FC; --acc2-d: #5FE0D0; }
+  :root[data-palet="mavi"]   { --g1: #1D4ED8; --g2: #0891B2; --acc-l: #1D4ED8; --acc2-l: #0E7490; --acc-d: #7FA6FF; --acc2-d: #5ED3EE; }
+  :root[data-palet="grafit"] { --g1: #475569; --g2: #1F2937; --acc-l: #334155; --acc2-l: #0F172A; --acc-d: #CBD5E1; --acc2-d: #94A3B8; }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0; color: var(--fg);
+    background-color: var(--bg);
+    background-image: radial-gradient(130% 50% at 50% -6%, color-mix(in srgb, var(--g2) calc(var(--glow) * 100%), transparent), transparent 64%);
+    background-repeat: no-repeat;
+    font: 16px/1.6 var(--font-body);
+    display: flex; flex-direction: column; -webkit-text-size-adjust: 100%;
+  }
+  [hidden] { display: none !important; }
+  button { font-family: inherit; }
+  svg { display: block; }
+
+  .wrap {
+    width: 100%; max-width: 760px; margin: 0 auto;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .gt { background: var(--grad-text); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
+
+  /* Üst çubuk */
+  header { padding-top: env(safe-area-inset-top, 0px); }
+  .bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-block: 10px 6px; }
+  .sag { display: flex; gap: 4px; }
+  .marka { font: 700 19px/1 var(--font-display); letter-spacing: -0.01em; }
+  .marka span { margin-left: 5px; }
+  .ikon {
+    width: 40px; height: 40px; display: grid; place-items: center;
+    color: var(--fg); background: transparent; border: 0; border-radius: 10px; cursor: pointer;
+  }
+  .ikon:hover { background: var(--accent-soft); }
+  .ikon svg { width: 21px; height: 21px; }
+
+  .modlar { display: flex; gap: 8px; overflow-x: auto; padding-block: 6px 12px; scrollbar-width: none; }
+  .modlar::-webkit-scrollbar { display: none; }
+  .mod {
+    flex: none; font: 500 14px/1 var(--font-body); color: var(--muted);
+    background: transparent; border: 1px solid var(--line); border-radius: 999px;
+    padding: 9px 14px; cursor: pointer;
+  }
+  .mod:hover { color: var(--fg); border-color: var(--muted); }
+  .mod[aria-selected="true"] { color: var(--accent); background: var(--accent-soft); border-color: var(--accent); font-weight: 600; }
+
+  /* Sohbet alanı */
+  main { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; border-top: 1px solid var(--line); }
+  #liste { display: flex; flex-direction: column; gap: 26px; padding-block: 24px 28px; }
+
+  .bos { padding-top: 6vh; }
+  .bos h1 { font: 700 clamp(30px, 8vw, 44px)/1.08 var(--font-display); letter-spacing: -0.025em; margin: 0 0 10px; text-wrap: balance; }
+  .bos p { margin: 0 0 24px; color: var(--muted); max-width: 44ch; }
+  .oneriler { display: grid; gap: 8px; }
+  .oneri {
+    text-align: left; font: 500 15px/1.4 var(--font-body); color: var(--fg);
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  }
+  .oneri svg { width: 16px; height: 16px; flex: none; color: var(--muted); }
+  .oneri:hover { border-color: var(--accent); }
+  .oneri:hover svg { color: var(--accent); }
+
+  .msg { display: flex; flex-direction: column; min-width: 0; }
+  .msg.user { align-items: flex-end; gap: 6px; }
+  .msg.user .metin {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--g1) 14%, var(--surface)), color-mix(in srgb, var(--g2) 18%, var(--surface)));
+    border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
+    color: var(--fg); border-radius: 18px 18px 4px 18px;
+    padding: 10px 15px; max-width: 88%; white-space: pre-wrap; overflow-wrap: anywhere;
+  }
+  .ek-satir { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; max-width: 88%; }
+  .ek-resim { width: 92px; height: 92px; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); background: var(--code-bg); }
+  .ek-dosya {
+    display: inline-flex; align-items: center; gap: 8px; max-width: 220px; padding: 9px 12px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 12px; font-size: 14px;
+  }
+  .ek-dosya svg { width: 18px; height: 18px; flex: none; color: var(--accent); }
+  .ek-dosya span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .msg.bot .metin { overflow-wrap: anywhere; min-width: 0; }
+  .metin > :first-child { margin-top: 0; }
+  .metin p { margin: 0 0 12px; }
+  .metin > :last-child { margin-bottom: 0; }
+  .metin ul, .metin ol { margin: 0 0 12px; padding-left: 22px; }
+  .metin li { margin-bottom: 5px; }
+  .metin li::marker { color: var(--accent); }
+  .metin h4 { font: 600 17px/1.3 var(--font-display); margin: 18px 0 8px; }
+  .metin a { color: var(--accent); text-underline-offset: 3px; }
+  .metin blockquote { margin: 0 0 12px; padding: 2px 0 2px 14px; border-left: 3px solid var(--line); color: var(--muted); }
+  .metin hr { border: 0; border-top: 1px solid var(--line); margin: 16px 0; }
+  .metin code { font: 0.88em var(--font-mono); background: var(--code-bg); border-radius: 5px; padding: 2px 6px; }
+  .kod { background: var(--code-bg); border: 1px solid var(--line); border-radius: 12px; margin: 0 0 12px; overflow: hidden; }
+  .kod-ust {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 8px 6px 14px; border-bottom: 1px solid var(--line);
+    font: 600 12px/1 var(--font-body); letter-spacing: .05em; text-transform: uppercase; color: var(--muted);
+  }
+  .kod pre { margin: 0; padding: 12px 14px; overflow-x: auto; }
+  .kod pre code { background: none; padding: 0; font-size: 13.5px; line-height: 1.55; }
+  .tablo { overflow-x: auto; margin: 0 0 12px; border: 1px solid var(--line); border-radius: 12px; }
+  .tablo table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  .tablo th, .tablo td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .tablo th { background: var(--code-bg); font-weight: 600; white-space: nowrap; }
+  .tablo tr:last-child td { border-bottom: 0; }
+
+  .kucuk {
+    display: inline-flex; align-items: center; gap: 6px; font: 500 13px/1 var(--font-body);
+    color: var(--muted); background: transparent; border: 0; border-radius: 8px; padding: 7px 9px; cursor: pointer;
+  }
+  .kucuk svg { width: 15px; height: 15px; }
+  .kucuk:hover { color: var(--fg); background: var(--accent-soft); }
+  .eylem { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; margin: 8px 0 0 -9px; }
+  .arandi { display: inline-flex; align-items: center; gap: 6px; font: 500 12px/1 var(--font-body); color: var(--accent); padding: 7px 9px; }
+  .arandi svg { width: 14px; height: 14px; }
+
+  .imlec::after {
+    content: ""; display: inline-block; width: 8px; height: 1.05em; margin-left: 3px; vertical-align: text-bottom;
+    background: var(--grad); border-radius: 2px; animation: yan 1s steps(2, start) infinite;
+  }
+  @keyframes yan { to { visibility: hidden; } }
+  .yaziyor { display: inline-flex; align-items: center; gap: 10px; padding: 8px 0; color: var(--muted); font-size: 14px; }
+  .noktalar { display: inline-flex; gap: 5px; }
+  .noktalar i { width: 7px; height: 7px; border-radius: 50%; background: var(--grad); animation: nabiz 1.1s infinite ease-in-out; }
+  .noktalar i:nth-child(2) { animation-delay: .15s; }
+  .noktalar i:nth-child(3) { animation-delay: .3s; }
+  @keyframes nabiz { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) {
+    .noktalar i { animation: none; opacity: .6; }
+    .imlec::after { animation: none; }
+    .cekmece, .ortu, .sayfa { transition: none !important; }
+  }
+
+  .hata {
+    border: 1px solid var(--danger); color: var(--danger); border-radius: 12px; padding: 12px 14px;
+    display: flex; flex-direction: column; align-items: flex-start; gap: 10px; overflow-wrap: anywhere;
+  }
+  .hata button {
+    font: 500 14px/1 var(--font-body); color: var(--danger); background: transparent;
+    border: 1px solid var(--danger); border-radius: 8px; padding: 8px 12px; cursor: pointer;
+  }
+
+  /* Yazma alanı */
+  footer { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .yazma {
+    display: flex; flex-direction: column; gap: 4px; margin-top: 10px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: 6px 6px 6px 8px;
+  }
+  .yazma:focus-within { border-color: var(--accent); }
+  .satir { display: flex; align-items: flex-end; gap: 2px; }
+  textarea {
+    flex: 1; min-width: 0; resize: none; border: 0; outline: 0; background: transparent;
+    font: 16px/1.45 var(--font-body); color: var(--fg); padding: 9px 6px; max-height: 160px;
+  }
+  textarea::placeholder { color: var(--muted); }
+  .ikon-k {
+    flex: none; width: 40px; height: 40px; display: grid; place-items: center;
+    color: var(--muted); background: transparent; border: 0; border-radius: 50%; cursor: pointer;
+  }
+  .ikon-k svg { width: 21px; height: 21px; }
+  .ikon-k:hover { color: var(--fg); background: var(--accent-soft); }
+  .ikon-k[aria-pressed="true"] { color: var(--accent); background: var(--accent-soft); }
+  .gonder {
+    flex: none; width: 42px; height: 42px; display: grid; place-items: center; margin-left: 2px;
+    color: var(--accent-fg); background: var(--grad); border: 0; border-radius: 50%; cursor: pointer;
+  }
+  .gonder svg { width: 19px; height: 19px; }
+  .gonder:disabled { opacity: .35; cursor: default; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .not { margin: 0; padding-block: 8px 10px; font-size: 12px; text-align: center; color: var(--muted); }
+
+  .ekler { display: flex; gap: 8px; overflow-x: auto; padding: 4px 4px 2px 2px; }
+  .ek-oge { position: relative; flex: none; }
+  .ek-oge img { width: 56px; height: 56px; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); display: block; }
+  .ek-oge .dosya {
+    height: 56px; max-width: 170px; display: flex; align-items: center; gap: 8px; padding: 0 12px;
+    background: var(--code-bg); border: 1px solid var(--line); border-radius: 12px; font-size: 13px; line-height: 1.25;
+  }
+  .ek-oge .dosya svg { width: 18px; height: 18px; flex: none; color: var(--accent); }
+  .ek-oge .dosya span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+  .ek-oge .dosya small { display: block; color: var(--muted); font-size: 11px; }
+  .ek-oge .bekle { opacity: .55; }
+  .ek-x {
+    position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; display: grid; place-items: center;
+    background: var(--fg); color: var(--bg); border: 0; border-radius: 50%; cursor: pointer; padding: 0;
+  }
+  .ek-x svg { width: 12px; height: 12px; }
+
+  .bildirim {
+    position: fixed; left: 50%; top: calc(12px + env(safe-area-inset-top, 0px)); transform: translateX(-50%);
+    max-width: min(92vw, 420px); background: var(--fg); color: var(--bg); font-size: 14px; line-height: 1.4;
+    padding: 11px 16px; border-radius: 12px; z-index: 50; text-align: center;
+  }
+
+  /* Geçmiş çekmecesi */
+  .ortu { position: fixed; inset: 0; background: var(--scrim); opacity: 0; transition: opacity .2s; z-index: 20; }
+  .ortu.acik { opacity: 1; }
+  .cekmece {
+    position: fixed; top: 0; bottom: 0; left: 0; width: min(330px, 86vw); z-index: 30;
+    background: var(--surface); border-right: 1px solid var(--line);
+    transform: translateX(-100%); visibility: hidden; transition: transform .22s ease, visibility .22s;
+    display: flex; flex-direction: column;
+    padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  }
+  .cekmece.acik { transform: none; visibility: visible; }
+  .c-ust { display: flex; align-items: center; justify-content: space-between; padding: 12px 12px 8px 16px; }
+  .c-ust b { font: 700 17px/1 var(--font-display); }
+  .c-yeni {
+    margin: 4px 16px 10px; display: flex; align-items: center; justify-content: center; gap: 8px;
+    font: 600 15px/1 var(--font-body); color: var(--accent-fg); background: var(--grad);
+    border: 0; border-radius: 12px; padding: 13px; cursor: pointer;
+  }
+  .c-yeni svg { width: 17px; height: 17px; }
+  .c-liste { flex: 1; overflow-y: auto; padding: 4px 8px 12px; display: flex; flex-direction: column; gap: 2px; }
+  .c-bos { color: var(--muted); font-size: 14px; padding: 10px 10px; }
+  .c-oge { display: flex; align-items: center; border-radius: 10px; }
+  .c-oge:hover, .c-oge.secili { background: var(--accent-soft); }
+  .c-ac {
+    flex: 1; min-width: 0; text-align: left; font: 500 15px/1.3 var(--font-body); color: var(--fg);
+    background: transparent; border: 0; padding: 11px 10px; cursor: pointer;
+  }
+  .c-ac span { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .c-ac small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .c-sil { flex: none; font: 500 13px/1 var(--font-body); color: var(--muted); background: transparent; border: 0; border-radius: 8px; padding: 10px; cursor: pointer; }
+  .c-sil svg { width: 17px; height: 17px; }
+  .c-sil:hover { color: var(--danger); }
+  .c-sil.emin { color: var(--danger); font-weight: 600; }
+  .c-alt { border-top: 1px solid var(--line); padding: 8px 12px; }
+  .c-alt .kucuk { width: 100%; justify-content: center; padding: 11px; }
+
+  /* Görünüm sayfası */
+  .sayfa {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; max-height: 88vh; overflow-y: auto;
+    background: var(--surface); border-top: 1px solid var(--line); border-radius: 22px 22px 0 0;
+    transform: translateY(100%); visibility: hidden; transition: transform .24s ease, visibility .24s;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .sayfa.acik { transform: none; visibility: visible; }
+  .sayfa .wrap { max-width: 560px; padding-block: 8px 20px; }
+  .s-ust { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .s-ust b { font: 700 18px/1 var(--font-display); }
+  .s-baslik { margin: 18px 0 10px; font: 600 12px/1 var(--font-body); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+  .segment { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; background: var(--code-bg); border-radius: 14px; }
+  .segment button {
+    font: 500 14px/1 var(--font-body); color: var(--muted); background: transparent; border: 0; border-radius: 10px; padding: 11px 6px; cursor: pointer;
+  }
+  .segment button[aria-checked="true"] { color: var(--accent-fg); background: var(--grad); font-weight: 600; }
+  .paletler { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 8px; }
+  .palet { display: flex; flex-direction: column; align-items: center; gap: 8px; background: transparent; border: 0; padding: 4px 0; cursor: pointer; color: var(--fg); font: 500 13px/1.2 var(--font-body); }
+  .palet i { width: 58px; height: 58px; border-radius: 50%; display: grid; place-items: center; border: 3px solid transparent; box-shadow: 0 0 0 1px var(--line); }
+  .palet i svg { width: 24px; height: 24px; color: #fff; opacity: 0; }
+  .palet[aria-checked="true"] i { box-shadow: 0 0 0 2px var(--accent); }
+  .palet[aria-checked="true"] i svg { opacity: 1; }
+  .alan { width: 100%; resize: vertical; min-height: 84px; font: 15px/1.5 var(--font-body); color: var(--fg); background: var(--code-bg); border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; outline: 0; }
+  .alan:focus { border-color: var(--accent); }
+  .ipucu { margin: 6px 0 0; font-size: 12.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="bar">
+        <button class="ikon" id="menu" type="button" aria-label="Sohbet geçmişi">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+        </button>
+        <div class="marka">Sayrox<span class="gt">AI</span></div>
+        <div class="sag">
+          <button class="ikon" id="gorunum" type="button" aria-label="Görünüm ayarları">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.9-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1 .8-1.7 1.8-1.7H17a4 4 0 0 0 4-4c0-4.4-4-8-9-8z"/><circle cx="7.5" cy="11" r="1" fill="currentColor"/><circle cx="10.5" cy="7" r="1" fill="currentColor"/><circle cx="15" cy="7.5" r="1" fill="currentColor"/></svg>
+          </button>
+          <button class="ikon" id="yeni" type="button" aria-label="Yeni sohbet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="modlar" id="modlar" role="tablist" aria-label="Çalışma modu"></div>
+    </div>
+  </header>
+
+  <main id="kaydir">
+    <div class="wrap">
+      <div id="liste"></div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <form id="form" class="yazma">
+        <div class="ekler" id="ekler" hidden></div>
+        <div class="satir">
+          <button class="ikon-k" id="ek-btn" type="button" aria-label="Dosya veya görsel ekle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5l-8.6 8.6a5.5 5.5 0 0 1-7.8-7.8l9-9a3.7 3.7 0 0 1 5.2 5.2l-9 9a1.8 1.8 0 0 1-2.6-2.6l8.3-8.3"/></svg>
+          </button>
+          <textarea id="girdi" rows="1" placeholder="Bir şey yaz..." aria-label="Mesajın"></textarea>
+          <button class="ikon-k" id="ara-btn" type="button" aria-pressed="false" aria-label="İnternette ara">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.9 5.7 3.9 9s-1.3 6.3-3.9 9c-2.6-2.7-3.9-5.7-3.9-9S9.4 5.7 12 3z"/></svg>
+          </button>
+          <button class="gonder" id="gonder" type="submit" aria-label="Gönder"></button>
+        </div>
+      </form>
+      <input type="file" id="dosya" multiple hidden accept="image/*,.pdf,.txt,.md,.csv,.json,.js,.py,.html,.css,.xml,.log,.yaml,.yml,.ts,.java,.c,.cpp,.sql,.ini">
+      <p class="not">Yapay zeka hata yapabilir. Önemli bilgileri kontrol et.</p>
+    </div>
+  </footer>
+
+  <div class="bildirim" id="bildirim" role="status" hidden></div>
+  <div class="ortu" id="ortu" hidden></div>
+
+  <aside class="cekmece" id="cekmece" aria-label="Sohbet geçmişi" aria-hidden="true">
+    <div class="c-ust">
+      <b>Sohbetler</b>
+      <button class="ikon" id="kapat" type="button" aria-label="Kapat">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+      </button>
+    </div>
+    <button class="c-yeni" id="c-yeni" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Yeni sohbet
+    </button>
+    <div class="c-liste" id="c-liste"></div>
+    <div class="c-alt"><button class="kucuk" id="c-kopya" type="button"></button></div>
+  </aside>
+
+  <section class="sayfa" id="sayfa" aria-label="Görünüm ayarları" aria-hidden="true">
+    <div class="wrap">
+      <div class="s-ust">
+        <b>Görünüm</b>
+        <button class="ikon" id="s-kapat" type="button" aria-label="Kapat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="s-baslik">Aydınlık</div>
+      <div class="segment" id="segment" role="radiogroup" aria-label="Aydınlık"></div>
+      <div class="s-baslik">Renk teması</div>
+      <div class="paletler" id="paletler" role="radiogroup" aria-label="Renk teması"></div>
+      <div class="s-baslik">Kişisel talimat</div>
+      <textarea class="alan" id="ozel" maxlength="600" placeholder="Örnek: Bana &quot;sen&quot; diye hitap et. Cevapları kısa tut. Ben yeni başlayan biriyim."></textarea>
+      <p class="ipucu">Asistan bunu her sohbette dikkate alır. Yalnızca bu tarayıcıda saklanır.</p>
+    </div>
+  </section>
+
+<script>
+  var KEY = "sayrox-sohbetler-v2";
+  var ESKI = "sayrox-sohbet-v1";
+  var GORUNUM = "sayrox-gorunum";
+  var OZEL = "sayrox-ozel";
+  var ARAMA = "sayrox-arama";
+
+  var DOC_LIMIT = 12000;     // her dosyadan alınacak en fazla karakter
+  var EK_LIMIT = 3;          // bir mesajdaki en fazla ek
+
+  var IC = {
+    gonder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
+    dur: '<svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2.5"/></svg>',
+    kopya: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
+    tekrar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>',
+    ok: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    cop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>',
+    dosya: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>',
+    x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    tik: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    kure: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.9 5.7 3.9 9s-1.3 6.3-3.9 9c-2.6-2.7-3.9-5.7-3.9-9S9.4 5.7 12 3z"/></svg>'
+  };
+
+  var MODLAR = {
+    genel: { ad: "Genel", oneriler: [
+      "Bir e-postayı daha kibar bir dille yeniden yaz",
+      "Bu hafta için basit bir çalışma planı hazırla",
+      "Yapay zeka nasıl çalışır, sade anlat"
+    ]},
+    ogretmen: { ad: "Öğretmen", oneriler: [
+      "Kesirleri 10 yaşındaki birine anlat",
+      "İngilizce geçmiş zamanı örneklerle öğret",
+      "Beni 5 soruluk kısa bir testle sına"
+    ]},
+    yazar: { ad: "Yazar", oneriler: [
+      "Kısa bir tanışma mesajı yaz",
+      "Bir ürün tanıtımı için 3 başlık öner",
+      "Yapıştıracağım paragrafı daha akıcı hale getir"
+    ]},
+    kod: { ad: "Kodcu", oneriler: [
+      "Python'da listenin ne olduğunu örnekle anlat",
+      "Bir hesap makinesi için HTML ve JavaScript yaz",
+      "Bir hata mesajını birlikte çözelim"
+    ]}
+  };
+  var SIRA = ["genel", "ogretmen", "yazar", "kod"];
+
+  var PALETLER = [
+    { id: "okyanus", ad: "Okyanus", g1: "#0E7C70", g2: "#1565C0" },
+    { id: "gun", ad: "Gün batımı", g1: "#D9480F", g2: "#C2255C" },
+    { id: "orman", ad: "Orman", g1: "#2F7D4F", g2: "#5E8C1A" },
+    { id: "aurora", ad: "Aurora", g1: "#6D28D9", g2: "#0E9F94" },
+    { id: "mavi", ad: "Mavi", g1: "#1D4ED8", g2: "#0891B2" },
+    { id: "grafit", ad: "Grafit", g1: "#475569", g2: "#1F2937" }
+  ];
+
+  var sohbetler = [];
+  var aktifId = null;      // null: henüz mesaj yazılmamış yeni sohbet
+  var taslakMod = "genel"; // yeni sohbetin modu
+  var bekliyor = false;
+  var hataMetni = "";
+  var iptal = null;
+  var silId = null;
+  var silZaman = null;
+  var ekler = [];          // gönderilmeyi bekleyen ekler
+  var araAcik = false;
+  var gorunum = { mod: "auto", palet: "okyanus" };
+
+  function oku(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function yaz(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+
+  /* ---------- Saklama ---------- */
+  function yukle() {
+    var ham = oku(KEY), liste = [];
+    try { liste = JSON.parse(ham || "[]"); } catch (e) { liste = []; }
+    if (!Array.isArray(liste)) liste = [];
+    sohbetler = liste.filter(function (c) { return c && c.id && Array.isArray(c.messages); });
+    if (!ham) {
+      var eski = [];
+      try { eski = JSON.parse(oku(ESKI) || "[]"); } catch (e) {}
+      if (Array.isArray(eski) && eski.length) {
+        sohbetler.push({ id: yeniId(), title: baslik(eski[0].content || "Eski sohbet"), mode: "genel", updated: Date.now(), messages: eski });
+      }
+    }
+  }
+  function kaydet() {
+    sohbetler.sort(function (a, b) { return b.updated - a.updated; });
+    sohbetler = sohbetler.slice(0, 40);
+    var s = JSON.stringify(sohbetler);
+    var i = sohbetler.length - 1;
+    while (s.length > 3800000 && i >= 0) {
+      sohbetler[i].messages.forEach(function (m) { delete m.images; });
+      i--;
+      s = JSON.stringify(sohbetler);
+    }
+    if (!yaz(KEY, s)) {
+      sohbetler.forEach(function (c) { c.messages.forEach(function (m) { delete m.images; }); });
+      yaz(KEY, JSON.stringify(sohbetler));
+    }
+  }
+  function yeniId() { return "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function baslik(t) { t = String(t).replace(/\s+/g, " ").trim(); return t.length > 42 ? t.slice(0, 42) + "…" : (t || "Yeni sohbet"); }
+  function aktif() { return sohbetler.filter(function (c) { return c.id === aktifId; })[0] || null; }
+  function mod() { var c = aktif(); return c ? c.mode : taslakMod; }
+
+  /* ---------- Biçimlendirme (basit markdown) ---------- */
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function satir(s) {
+    return s.split(/(`[^`]+`)/).map(function (p) {
+      if (p.length > 2 && p.charAt(0) === "`" && p.charAt(p.length - 1) === "`") {
+        return "<code>" + esc(p.slice(1, -1)) + "</code>";
+      }
+      p = esc(p);
+      p = p.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      p = p.replace(/(^|[^*\w])\*([^*\s][^*]*)\*(?![*\w])/g, "$1<em>$2</em>");
+      p = p.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+      return p;
+    }).join("");
+  }
+  function hucreler(r) {
+    return r.replace(/^\s*\|/, "").replace(/\|\s*$/, "").split("|").map(function (h) { return h.trim(); });
+  }
+  function tablo(rows) {
+    var bas = hucreler(rows[0]), h = "<div class=\"tablo\"><table><thead><tr>";
+    bas.forEach(function (x) { h += "<th>" + satir(x) + "</th>"; });
+    h += "</tr></thead><tbody>";
+    rows.slice(1).forEach(function (r) {
+      h += "<tr>";
+      hucreler(r).forEach(function (x) { h += "<td>" + satir(x) + "</td>"; });
+      h += "</tr>";
+    });
+    return h + "</tbody></table></div>";
+  }
+  var AYRAC = /^\s*\|?\s*:?-{2,}:?\s*(\|\s*:?-{2,}:?\s*)*\|?\s*$/;
+  function blok(t) {
+    var L = t.split("\n"), out = [], i = 0, lst = null, m;
+    function kapat() { if (lst) { out.push("</" + lst + ">"); lst = null; } }
+    while (i < L.length) {
+      var l = L[i].replace(/\s+$/, "");
+      if (/^\s*\|/.test(l) && i + 1 < L.length && AYRAC.test(L[i + 1])) {
+        kapat();
+        var rows = [l];
+        i += 2;
+        while (i < L.length && /^\s*\|/.test(L[i])) { rows.push(L[i].replace(/\s+$/, "")); i++; }
+        out.push(tablo(rows));
+        continue;
+      }
+      if ((m = l.match(/^\s*[-*•]\s+(.*)$/))) {
+        if (lst !== "ul") { kapat(); out.push("<ul>"); lst = "ul"; }
+        out.push("<li>" + satir(m[1]) + "</li>");
+      } else if ((m = l.match(/^\s*\d+[.)]\s+(.*)$/))) {
+        if (lst !== "ol") { kapat(); out.push("<ol>"); lst = "ol"; }
+        out.push("<li>" + satir(m[1]) + "</li>");
+      } else if ((m = l.match(/^#{1,4}\s+(.*)$/))) {
+        kapat(); out.push("<h4>" + satir(m[1]) + "</h4>");
+      } else if (/^\s*([-*_])\1{2,}\s*$/.test(l)) {
+        kapat(); out.push("<hr>");
+      } else if ((m = l.match(/^>\s?(.*)$/))) {
+        kapat(); out.push("<blockquote>" + satir(m[1]) + "</blockquote>");
+      } else if (l.trim() === "") {
+        kapat();
+      } else {
+        kapat(); out.push("<p>" + satir(l) + "</p>");
+      }
+      i++;
+    }
+    kapat();
+    return out.join("");
+  }
+  function md(src) {
+    return src.split("```").map(function (p, i) {
+      if (i % 2 === 1) {
+        var nl = p.indexOf("\n");
+        var dil = nl >= 0 ? p.slice(0, nl).trim() : "";
+        var kod = nl >= 0 ? p.slice(nl + 1) : p;
+        return '<div class="kod"><div class="kod-ust"><span>' + esc(dil || "kod") + '</span>' +
+          '<button class="kucuk" type="button" data-kopya="kod">' + IC.kopya + 'Kopyala</button></div>' +
+          "<pre><code>" + esc(kod.replace(/\n$/, "")) + "</code></pre></div>";
+      }
+      return blok(p);
+    }).join("");
+  }
+
+  /* ---------- Yardımcılar ---------- */
+  var liste = document.getElementById("liste");
+  var kaydir = document.getElementById("kaydir");
+  var girdi = document.getElementById("girdi");
+  var gonderBtn = document.getElementById("gonder");
+  var araBtn = document.getElementById("ara-btn");
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function dibeYakin() { return kaydir.scrollHeight - kaydir.scrollTop - kaydir.clientHeight < 140; }
+  function asagi() { kaydir.scrollTop = kaydir.scrollHeight; }
+
+  var bildirimZaman = null;
+  function bildir(metin) {
+    var b = document.getElementById("bildirim");
+    b.textContent = metin;
+    b.hidden = false;
+    clearTimeout(bildirimZaman);
+    bildirimZaman = setTimeout(function () { b.hidden = true; }, 3800);
+  }
+
+  function panoya(metin, dugme, etiket) {
+    function bitti() {
+      if (!dugme) return;
+      var eski = dugme.innerHTML;
+      dugme.innerHTML = IC.kopya + "Kopyalandı";
+      setTimeout(function () { dugme.innerHTML = eski; }, 1400);
+    }
+    function yedek() {
+      var t = document.createElement("textarea");
+      t.value = metin; t.style.position = "fixed"; t.style.opacity = "0";
+      document.body.appendChild(t); t.select();
+      try { document.execCommand("copy"); } catch (e) {}
+      document.body.removeChild(t);
+      bitti();
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(metin).then(bitti, yedek);
+    } else { yedek(); }
+  }
+
+  function selam() {
+    var s = new Date().getHours();
+    if (s >= 5 && s < 11) return "Günaydın";
+    if (s >= 11 && s < 18) return "İyi günler";
+    if (s >= 18 && s < 23) return "İyi akşamlar";
+    return "İyi geceler";
+  }
+
+  /* ---------- Görünüm (tema, renk) ---------- */
+  function gorunumUygula() {
+    var root = document.documentElement;
+    root.setAttribute("data-palet", gorunum.palet);
+    if (gorunum.mod === "light" || gorunum.mod === "dark") root.setAttribute("data-theme", gorunum.mod);
+    else root.removeAttribute("data-theme");
+  }
+  function gorunumKaydet() { yaz(GORUNUM, JSON.stringify(gorunum)); }
+  function gorunumYukle() {
+    try {
+      var g = JSON.parse(oku(GORUNUM) || "null");
+      if (g && (g.mod === "auto" || g.mod === "light" || g.mod === "dark")) gorunum.mod = g.mod;
+      if (g && PALETLER.some(function (p) { return p.id === g.palet; })) gorunum.palet = g.palet;
+    } catch (e) {}
+    gorunumUygula();
+  }
+  function cizGorunum() {
+    var seg = document.getElementById("segment");
+    seg.textContent = "";
+    [["light", "Açık"], ["dark", "Koyu"], ["auto", "Otomatik"]].forEach(function (x) {
+      var b = el("button", null, x[1]);
+      b.type = "button";
+      b.setAttribute("role", "radio");
+      b.setAttribute("aria-checked", gorunum.mod === x[0] ? "true" : "false");
+      b.addEventListener("click", function () { gorunum.mod = x[0]; gorunumUygula(); gorunumKaydet(); cizGorunum(); });
+      seg.appendChild(b);
+    });
+    var pal = document.getElementById("paletler");
+    pal.textContent = "";
+    PALETLER.forEach(function (p) {
+      var b = el("button", "palet");
+      b.type = "button";
+      b.setAttribute("role", "radio");
+      b.setAttribute("aria-checked", gorunum.palet === p.id ? "true" : "false");
+      b.setAttribute("aria-label", p.ad);
+      var i = el("i");
+      i.style.background = "linear-gradient(135deg," + p.g1 + "," + p.g2 + ")";
+      i.innerHTML = IC.tik;
+      b.appendChild(i);
+      b.appendChild(el("span", null, p.ad));
+      b.addEventListener("click", function () { gorunum.palet = p.id; gorunumUygula(); gorunumKaydet(); cizGorunum(); });
+      pal.appendChild(b);
+    });
+  }
+  var sayfa = document.getElementById("sayfa");
+  var ortu = document.getElementById("ortu");
+  var cekmece = document.getElementById("cekmece");
+  function ortuAc() {
+    ortu.hidden = false;
+    requestAnimationFrame(function () { ortu.classList.add("acik"); });
+  }
+  function ortuKapat() {
+    ortu.classList.remove("acik");
+    setTimeout(function () {
+      if (!cekmece.classList.contains("acik") && !sayfa.classList.contains("acik")) ortu.hidden = true;
+    }, 220);
+  }
+  function sayfaAc() {
+    cizGorunum();
+    document.getElementById("ozel").value = oku(OZEL) || "";
+    ortuAc();
+    sayfa.classList.add("acik");
+    sayfa.setAttribute("aria-hidden", "false");
+  }
+  function sayfaKapat() {
+    sayfa.classList.remove("acik");
+    sayfa.setAttribute("aria-hidden", "true");
+    ortuKapat();
+  }
+
+  /* ---------- Çizim ---------- */
+  function cizModlar() {
+    var kap = document.getElementById("modlar");
+    kap.textContent = "";
+    SIRA.forEach(function (id) {
+      var b = el("button", "mod", MODLAR[id].ad);
+      b.type = "button";
+      b.setAttribute("role", "tab");
+      b.setAttribute("aria-selected", mod() === id ? "true" : "false");
+      b.addEventListener("click", function () {
+        var c = aktif();
+        if (c) { c.mode = id; kaydet(); } else { taslakMod = id; }
+        cizModlar();
+        if (!aktif()) ciz();
+      });
+      kap.appendChild(b);
+    });
+  }
+
+  function botKutusu(m, son) {
+    var b = el("div", "msg bot");
+    var t = el("div", "metin");
+    t.innerHTML = md(m.content);
+    b.appendChild(t);
+    var e = el("div", "eylem");
+    var k = el("button", "kucuk");
+    k.type = "button"; k.setAttribute("data-kopya", "mesaj");
+    k.innerHTML = IC.kopya + "Kopyala";
+    e.appendChild(k);
+    if (son) {
+      var y = el("button", "kucuk");
+      y.type = "button"; y.setAttribute("data-yeniden", "1");
+      y.innerHTML = IC.tekrar + "Yeniden üret";
+      e.appendChild(y);
+    }
+    if (m.search) {
+      var a = el("span", "arandi");
+      a.innerHTML = IC.kure + "İnternette arandı";
+      e.appendChild(a);
+    }
+    b.appendChild(e);
+    return b;
+  }
+
+  function kullaniciKutusu(m) {
+    var u = el("div", "msg user");
+    if ((m.images && m.images.length) || (m.docs && m.docs.length)) {
+      var ek = el("div", "ek-satir");
+      (m.images || []).forEach(function (src) {
+        var im = el("img", "ek-resim");
+        im.src = src; im.alt = "Eklenen görsel";
+        ek.appendChild(im);
+      });
+      (m.docs || []).forEach(function (d) {
+        var ch = el("div", "ek-dosya");
+        ch.innerHTML = IC.dosya;
+        ch.appendChild(el("span", null, d.ad));
+        ek.appendChild(ch);
+      });
+      u.appendChild(ek);
+    }
+    if (m.content) u.appendChild(el("div", "metin", m.content));
+    return u;
+  }
+
+  function ciz() {
+    liste.textContent = "";
+    var c = aktif();
+    var msgs = c ? c.messages : [];
+    if (msgs.length === 0) {
+      var bos = el("div", "bos");
+      var h = el("h1");
+      h.innerHTML = esc(selam()) + '.<br><span class="gt">Ne üzerinde çalışıyoruz?</span>';
+      bos.appendChild(h);
+      bos.appendChild(el("p", null, "Sorunu yaz, dosya ya da görsel ekle. Üstteki modlarla cevap tarzını değiştirebilirsin."));
+      var kutu = el("div", "oneriler");
+      MODLAR[mod()].oneriler.forEach(function (o) {
+        var b = el("button", "oneri");
+        b.type = "button";
+        b.appendChild(el("span", null, o));
+        b.insertAdjacentHTML("beforeend", IC.ok);
+        b.addEventListener("click", function () { gonder(o, []); });
+        kutu.appendChild(b);
+      });
+      bos.appendChild(kutu);
+      liste.appendChild(bos);
+      dugmeDurumu();
+      return;
+    }
+    msgs.forEach(function (m, i) {
+      if (m.role === "user") {
+        liste.appendChild(kullaniciKutusu(m));
+      } else if (bekliyor && i === msgs.length - 1) {
+        var b = el("div", "msg bot");
+        var t = el("div", "metin");
+        t.id = "canli";
+        if (m.content) { t.innerHTML = md(m.content); t.classList.add("imlec"); }
+        else {
+          t.innerHTML = '<div class="yaziyor" role="status"><span class="noktalar"><i></i><i></i><i></i></span>' +
+            (m.search ? "İnternette aranıyor…" : "") + "</div>";
+        }
+        b.appendChild(t);
+        liste.appendChild(b);
+      } else {
+        liste.appendChild(botKutusu(m, !bekliyor && i === msgs.length - 1));
+      }
+    });
+    if (hataMetni) {
+      var hh = el("div", "hata");
+      hh.appendChild(el("span", null, hataMetni));
+      var tk = el("button", null, "Tekrar dene");
+      tk.type = "button";
+      tk.addEventListener("click", function () { hataMetni = ""; uret(); });
+      hh.appendChild(tk);
+      liste.appendChild(hh);
+    }
+    dugmeDurumu();
+  }
+
+  function hazirEkSayisi() { return ekler.filter(function (e) { return e.durum === "hazir"; }).length; }
+  function dugmeDurumu() {
+    if (bekliyor) {
+      gonderBtn.innerHTML = IC.dur;
+      gonderBtn.setAttribute("aria-label", "Durdur");
+      gonderBtn.disabled = false;
+    } else {
+      gonderBtn.innerHTML = IC.gonder;
+      gonderBtn.setAttribute("aria-label", "Gönder");
+      var okunuyor = ekler.some(function (e) { return e.durum === "okunuyor"; });
+      gonderBtn.disabled = okunuyor || (girdi.value.trim() === "" && hazirEkSayisi() === 0);
+    }
+  }
+
+  /* ---------- Ekler ---------- */
+  function cizEkler() {
+    var kap = document.getElementById("ekler");
+    kap.textContent = "";
+    kap.hidden = ekler.length === 0;
+    ekler.forEach(function (e) {
+      var o = el("div", "ek-oge");
+      if (e.tur === "gorsel" && e.url) {
+        var im = el("img", e.durum === "okunuyor" ? "bekle" : "");
+        im.src = e.url; im.alt = e.ad;
+        o.appendChild(im);
+      } else {
+        var d = el("div", "dosya" + (e.durum === "okunuyor" ? " bekle" : ""));
+        d.innerHTML = IC.dosya;
+        var sp = el("span", null, e.ad);
+        if (e.durum === "okunuyor") sp.appendChild(el("small", null, "okunuyor…"));
+        else if (e.kisaltildi) sp.appendChild(el("small", null, "kısaltıldı"));
+        d.appendChild(sp);
+        o.appendChild(d);
+      }
+      var x = el("button", "ek-x");
+      x.type = "button";
+      x.setAttribute("aria-label", "Eki kaldır");
+      x.innerHTML = IC.x;
+      x.addEventListener("click", function () {
+        ekler = ekler.filter(function (z) { return z !== e; });
+        cizEkler();
+        dugmeDurumu();
+      });
+      o.appendChild(x);
+      kap.appendChild(o);
+    });
+  }
+
+  function gorselKucult(file) {
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(file);
+      var im = new Image();
+      im.onload = function () {
+        var max = 1024, w = im.naturalWidth, h = im.naturalHeight;
+        var s = Math.min(1, max / Math.max(w, h));
+        var cv = document.createElement("canvas");
+        cv.width = Math.max(1, Math.round(w * s)); cv.height = Math.max(1, Math.round(h * s));
+        var cx = cv.getContext("2d");
+        cx.fillStyle = "#fff"; cx.fillRect(0, 0, cv.width, cv.height);
+        cx.drawImage(im, 0, 0, cv.width, cv.height);
+        URL.revokeObjectURL(url);
+        res(cv.toDataURL("image/jpeg", 0.82));
+      };
+      im.onerror = function () { URL.revokeObjectURL(url); rej(new Error("Bu görsel açılamadı. JPG ya da PNG dene.")); };
+      im.src = url;
+    });
+  }
+
+  var pdfSoz = null;
+  var PDF_SURUM = "3.11.174";
+  function pdfYukle() {
+    if (pdfSoz) return pdfSoz;
+    pdfSoz = new Promise(function (res, rej) {
+      var taban = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/" + PDF_SURUM + "/";
+      var s = document.createElement("script");
+      s.src = taban + "pdf.min.js";
+      s.onload = function () {
+        fetch(taban + "pdf.worker.min.js").then(function (r) { return r.text(); }).then(function (t) {
+          window.pdfjsLib.GlobalWorkerOptions.workerSrc = URL.createObjectURL(new Blob([t], { type: "text/javascript" }));
+          res(window.pdfjsLib);
+        }).catch(rej);
+      };
+      s.onerror = function () { rej(new Error("PDF okuyucu yüklenemedi. İnternetini kontrol et.")); };
+      document.head.appendChild(s);
+    });
+    pdfSoz.catch(function () { pdfSoz = null; });
+    return pdfSoz;
+  }
+  async function pdfMetni(file) {
+    var lib = await pdfYukle();
+    var pdf = await lib.getDocument({ data: await file.arrayBuffer() }).promise;
+    var out = "", n = Math.min(pdf.numPages, 40);
+    for (var i = 1; i <= n && out.length < DOC_LIMIT + 500; i++) {
+      var pg = await pdf.getPage(i);
+      var tc = await pg.getTextContent();
+      out += tc.items.map(function (x) { return x.str; }).join(" ") + "\n\n";
+    }
+    return out;
+  }
+
+  var METIN_UZANTI = /\.(txt|md|csv|json|js|py|html|css|xml|log|ya?ml|ts|java|c|cpp|sql|ini)$/i;
+  async function ekle(dosyalar) {
+    var liste2 = Array.prototype.slice.call(dosyalar);
+    for (var i = 0; i < liste2.length; i++) {
+      var f = liste2[i];
+      if (ekler.length >= EK_LIMIT) { bildir("Bir mesaja en fazla " + EK_LIMIT + " ek ekleyebilirsin."); break; }
+      var e = { id: yeniId(), ad: f.name || "dosya", tur: "doc", durum: "okunuyor" };
+      var gorsel = /^image\//.test(f.type);
+      var pdf = f.type === "application/pdf" || /\.pdf$/i.test(f.name);
+      var metin = /^text\//.test(f.type) || METIN_UZANTI.test(f.name) || f.type === "application/json";
+      if (!gorsel && !pdf && !metin) { bildir("“" + e.ad + "” desteklenmiyor. Görsel, PDF ya da metin dosyası ekle."); continue; }
+      if (f.size > 25 * 1024 * 1024) { bildir("“" + e.ad + "” çok büyük (en fazla 25 MB)."); continue; }
+      e.tur = gorsel ? "gorsel" : "doc";
+      ekler.push(e);
+      cizEkler(); dugmeDurumu();
+      try {
+        if (gorsel) {
+          e.url = await gorselKucult(f);
+        } else {
+          var t = pdf ? await pdfMetni(f) : await f.text();
+          t = t.replace(/\u0000/g, "").replace(/[ \t]+\n/g, "\n").trim();
+          if (!t) throw new Error("“" + e.ad + "” içinde okunabilir metin yok. Taranmış bir PDF olabilir.");
+          if (t.length > DOC_LIMIT) { t = t.slice(0, DOC_LIMIT); e.kisaltildi = true; }
+          e.metin = t;
+        }
+        e.durum = "hazir";
+      } catch (err) {
+        ekler = ekler.filter(function (z) { return z !== e; });
+        bildir(err && err.message ? err.message : "Dosya okunamadı.");
+      }
+      cizEkler(); dugmeDurumu();
+    }
+  }
+
+  /* ---------- Geçmiş çekmecesi ---------- */
+  function cizCekmece() {
+    var kap = document.getElementById("c-liste");
+    kap.textContent = "";
+    if (sohbetler.length === 0) {
+      kap.appendChild(el("div", "c-bos", "Henüz sohbet yok. İlk mesajını yazınca burada görünür."));
+      return;
+    }
+    sohbetler.forEach(function (c) {
+      var o = el("div", "c-oge" + (c.id === aktifId ? " secili" : ""));
+      var ac2 = el("button", "c-ac");
+      ac2.type = "button";
+      ac2.appendChild(el("span", null, c.title));
+      ac2.appendChild(el("small", null, MODLAR[c.mode] ? MODLAR[c.mode].ad : "Genel"));
+      ac2.addEventListener("click", function () { sec(c.id); });
+      var s = el("button", "c-sil" + (silId === c.id ? " emin" : ""));
+      s.type = "button";
+      s.setAttribute("aria-label", "Sohbeti sil");
+      if (silId === c.id) s.textContent = "Silinsin mi?"; else s.innerHTML = IC.cop;
+      s.addEventListener("click", function () {
+        if (silId === c.id) { sil(c.id); }
+        else {
+          silId = c.id;
+          clearTimeout(silZaman);
+          silZaman = setTimeout(function () { silId = null; cizCekmece(); }, 3000);
+          cizCekmece();
+        }
+      });
+      o.appendChild(ac2); o.appendChild(s);
+      kap.appendChild(o);
+    });
+  }
+  function cekmeceAc() {
+    cizCekmece();
+    document.getElementById("c-kopya").innerHTML = IC.kopya + "Bu sohbeti kopyala";
+    ortuAc();
+    cekmece.classList.add("acik");
+    cekmece.setAttribute("aria-hidden", "false");
+  }
+  function cekmeceKapat() {
+    cekmece.classList.remove("acik");
+    cekmece.setAttribute("aria-hidden", "true");
+    ortuKapat();
+  }
+  function hepsiniKapat() { cekmeceKapat(); sayfaKapat(); }
+
+  /* ---------- Sohbet mantığı ---------- */
+  function durdur() { if (iptal) iptal.abort(); }
+
+  function yeni() {
+    if (bekliyor) durdur();
+    aktifId = null;
+    hataMetni = "";
+    cizModlar();
+    ciz();
+    girdi.focus();
+  }
+  function sec(id) {
+    if (bekliyor) durdur();
+    aktifId = id;
+    hataMetni = "";
+    cekmeceKapat();
+    cizModlar();
+    ciz();
+    asagi();
+  }
+  function sil(id) {
+    sohbetler = sohbetler.filter(function (c) { return c.id !== id; });
+    silId = null;
+    kaydet();
+    if (aktifId === id) { aktifId = null; hataMetni = ""; cizModlar(); ciz(); }
+    cizCekmece();
+  }
+
+  /* API'ye gidecek mesajlar: son ekli mesajın içeriği tam, eskiler kısa not olarak gider. */
+  function baglamKur(msgs, gorselDahil) {
+    var son = msgs.slice(-20);
+    var sonGorsel = -1, sonDoc = -1;
+    son.forEach(function (m, i) {
+      if (gorselDahil && m.role === "user" && m.images && m.images.length) sonGorsel = i;
+      if (m.role === "user" && m.docs && m.docs.length) sonDoc = i;
+    });
+    return son.map(function (m, i) {
+      var metin = m.content || "";
+      if (m.docs && m.docs.length) {
+        if (i === sonDoc) {
+          m.docs.forEach(function (d) {
+            metin += "\n\n--- Ek dosya: " + d.ad + " ---\n" + d.metin + "\n--- Dosya sonu" + (d.kisaltildi ? " (uzun olduğu için kısaltıldı)" : "") + " ---";
+          });
+        } else {
+          metin += "\n\n[Önceki ek dosyalar: " + m.docs.map(function (d) { return d.ad; }).join(", ") + "]";
+        }
+      }
+      if (m.images && m.images.length) {
+        if (i === sonGorsel) {
+          var parcalar = [{ type: "text", text: metin.trim() || "Bu görseli açıkla." }];
+          m.images.forEach(function (u) { parcalar.push({ type: "image_url", image_url: { url: u } }); });
+          return { role: m.role, content: parcalar };
+        }
+        metin += "\n\n[Bu mesaja " + m.images.length + " görsel eklenmişti]";
+      }
+      return { role: m.role, content: metin.trim() || "(ek dosya)" };
+    });
+  }
+
+  async function uret() {
+    var c = aktif();
+    if (!c || bekliyor || c.messages.length === 0) return;
+    var son = c.messages[c.messages.length - 1];
+    if (son.role !== "user") return;
+
+    // Bu mesajda görsel varsa görsel okunur. Yoksa ve arama açıksa internette aranır
+    // (eski görseller o istekte gönderilmez). İkisi de değilse eski görseller bağlamda kalır.
+    var bunuGorselli = !!(son.images && son.images.length);
+    var aramaYap = araAcik && !bunuGorselli;
+    var baglam = baglamKur(c.messages, !aramaYap);
+    var cevap = { role: "assistant", content: "" };
+    if (aramaYap) cevap.search = true;
+    c.messages.push(cevap);
+    bekliyor = true;
+    hataMetni = "";
+    iptal = new AbortController();
+    ciz();
+    asagi();
+
+    var cizimBekliyor = false;
+    function canliGuncelle() {
+      if (cizimBekliyor) return;
+      cizimBekliyor = true;
+      requestAnimationFrame(function () {
+        cizimBekliyor = false;
+        var t = document.getElementById("canli");
+        if (!t) return;
+        var yakin = dibeYakin();
+        t.innerHTML = md(cevap.content);
+        t.classList.add("imlec");
+        if (yakin) asagi();
+      });
+    }
+
+    try {
+      var r = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode: c.mode,
+          ozel: oku(OZEL) || "",
+          search: !!cevap.search,
+          messages: baglam
+        }),
+        signal: iptal.signal
+      });
+      if (!r.ok) {
+        var v = {};
+        try { v = await r.json(); } catch (e) {}
+        throw new Error(v.error || "Cevap alınamadı. Biraz sonra tekrar dene.");
+      }
+      if (r.body && r.body.getReader) {
+        var okuyucu = r.body.getReader(), cozucu = new TextDecoder();
+        while (true) {
+          var o = await okuyucu.read();
+          if (o.done) break;
+          cevap.content += cozucu.decode(o.value, { stream: true });
+          canliGuncelle();
+        }
+      } else {
+        cevap.content = await r.text();
+      }
+      if (!cevap.content.trim()) throw new Error("Boş cevap geldi. Tekrar dene.");
+    } catch (e) {
+      if (e && e.name === "AbortError") {
+        /* Kullanıcı durdurdu: gelen kısmı koru */
+      } else {
+        hataMetni = e && e.message && e.message !== "Failed to fetch" ? e.message
+          : "Bağlantı hatası. İnternetini kontrol edip tekrar dene.";
+      }
+    }
+    if (!cevap.content.trim()) {
+      c.messages = c.messages.filter(function (m) { return m !== cevap; });
+    }
+    bekliyor = false;
+    iptal = null;
+    c.updated = Date.now();
+    kaydet();
+    ciz();
+    asagi();
+  }
+
+  function gonder(metin, eklenenler) {
+    metin = (metin || "").trim();
+    eklenenler = eklenenler || [];
+    if ((!metin && eklenenler.length === 0) || bekliyor) return;
+    var c = aktif();
+    if (!c) {
+      var ilk = metin || (eklenenler[0] ? eklenenler[0].ad : "Yeni sohbet");
+      c = { id: yeniId(), title: baslik(ilk), mode: taslakMod, updated: Date.now(), messages: [] };
+      sohbetler.unshift(c);
+      aktifId = c.id;
+    }
+    var m = { role: "user", content: metin };
+    var gorseller = eklenenler.filter(function (e) { return e.tur === "gorsel"; }).map(function (e) { return e.url; });
+    var dokumanlar = eklenenler.filter(function (e) { return e.tur === "doc"; })
+      .map(function (e) { return { ad: e.ad, metin: e.metin, kisaltildi: !!e.kisaltildi }; });
+    if (gorseller.length) m.images = gorseller;
+    if (dokumanlar.length) m.docs = dokumanlar;
+    c.messages.push(m);
+    c.updated = Date.now();
+    kaydet();
+    girdi.value = "";
+    boyutla();
+    uret();
+  }
+
+  function gonderForm() {
+    if (bekliyor) { durdur(); return; }
+    if (ekler.some(function (e) { return e.durum === "okunuyor"; })) { bildir("Ekler okunuyor, bir saniye bekle."); return; }
+    var hazir = ekler.filter(function (e) { return e.durum === "hazir"; });
+    var metin = girdi.value;
+    ekler = [];
+    cizEkler();
+    gonder(metin, hazir);
+  }
+
+  function yenidenUret() {
+    var c = aktif();
+    if (!c || bekliyor) return;
+    while (c.messages.length && c.messages[c.messages.length - 1].role === "assistant") c.messages.pop();
+    uret();
+  }
+
+  function boyutla() {
+    girdi.style.height = "auto";
+    girdi.style.height = Math.min(girdi.scrollHeight, 160) + "px";
+  }
+
+  function sohbetMetni() {
+    var c = aktif();
+    if (!c) return "";
+    return c.messages.map(function (m) {
+      var ek = [];
+      (m.docs || []).forEach(function (d) { ek.push("[dosya: " + d.ad + "]"); });
+      (m.images || []).forEach(function () { ek.push("[görsel]"); });
+      return (m.role === "user" ? "Sen: " : "Sayrox: ") + (m.content || "") + (ek.length ? " " + ek.join(" ") : "");
+    }).join("\n\n");
+  }
+
+  /* ---------- Olaylar ---------- */
+  document.getElementById("form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    gonderForm();
+  });
+  girdi.addEventListener("input", function () { boyutla(); dugmeDurumu(); });
+  girdi.addEventListener("keydown", function (e) {
+    var masaustu = window.matchMedia && window.matchMedia("(pointer: fine)").matches;
+    if (e.key === "Enter" && !e.shiftKey && masaustu) {
+      e.preventDefault();
+      if (!bekliyor) gonderForm();
+    }
+  });
+  girdi.addEventListener("paste", function (e) {
+    var dosyalar = e.clipboardData && e.clipboardData.files;
+    if (dosyalar && dosyalar.length) { e.preventDefault(); ekle(dosyalar); }
+  });
+
+  var dosyaGirdi = document.getElementById("dosya");
+  document.getElementById("ek-btn").addEventListener("click", function () { dosyaGirdi.click(); });
+  dosyaGirdi.addEventListener("change", function () {
+    if (dosyaGirdi.files && dosyaGirdi.files.length) ekle(dosyaGirdi.files);
+    dosyaGirdi.value = "";
+  });
+
+  function araGuncelle() {
+    araBtn.setAttribute("aria-pressed", araAcik ? "true" : "false");
+    girdi.placeholder = araAcik ? "İnternette aramak için yaz..." : "Bir şey yaz...";
+  }
+  araBtn.addEventListener("click", function () {
+    araAcik = !araAcik;
+    yaz(ARAMA, araAcik ? "1" : "0");
+    araGuncelle();
+    bildir(araAcik ? "İnternette arama açık. Cevaplar güncel kaynaklara dayanır." : "İnternette arama kapalı.");
+  });
+
+  liste.addEventListener("click", function (e) {
+    var k = e.target.closest("[data-kopya]");
+    if (k) {
+      if (k.getAttribute("data-kopya") === "kod") {
+        var kod = k.closest(".kod").querySelector("code");
+        panoya(kod ? kod.textContent : "", k);
+      } else {
+        var c = aktif();
+        var idx = Array.prototype.indexOf.call(liste.children, k.closest(".msg"));
+        if (c && c.messages[idx]) panoya(c.messages[idx].content, k);
+      }
+      return;
+    }
+    if (e.target.closest("[data-yeniden]")) yenidenUret();
+  });
+  document.getElementById("yeni").addEventListener("click", yeni);
+  document.getElementById("c-yeni").addEventListener("click", function () { cekmeceKapat(); yeni(); });
+  document.getElementById("c-kopya").addEventListener("click", function () {
+    var t = sohbetMetni();
+    if (!t) { bildir("Kopyalanacak bir sohbet yok."); return; }
+    panoya(t, document.getElementById("c-kopya"));
+  });
+  document.getElementById("menu").addEventListener("click", cekmeceAc);
+  document.getElementById("kapat").addEventListener("click", cekmeceKapat);
+  document.getElementById("gorunum").addEventListener("click", sayfaAc);
+  document.getElementById("s-kapat").addEventListener("click", sayfaKapat);
+  ortu.addEventListener("click", hepsiniKapat);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") hepsiniKapat(); });
+  document.getElementById("ozel").addEventListener("input", function (e) { yaz(OZEL, e.target.value.slice(0, 600)); });
+
+  /* ---------- Başlangıç ---------- */
+  gorunumYukle();
+  araAcik = oku(ARAMA) === "1";
+  araGuncelle();
+  yukle();
+  sohbetler.sort(function (a, b) { return b.updated - a.updated; });
+  cizModlar();
+  ciz();
+</script>
+</body>
+</html>
